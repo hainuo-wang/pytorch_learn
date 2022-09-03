@@ -1,5 +1,7 @@
 import os
 import shutil
+import sys
+
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
@@ -7,11 +9,13 @@ from torch.utils.tensorboard import SummaryWriter
 from torchvision import datasets, transforms
 
 # 定义训练设备
+from tqdm import tqdm
+
 device = torch.device("cuda")
 # 准备训练集、测试集
-train_dataset = datasets.MNIST(root="MNIST", train=True, download=True,
+train_dataset = datasets.MNIST(root="dataset/mnist/", train=True, download=True,
                                transform=transforms.ToTensor())
-test_dataset = datasets.MNIST(root="MNIST", train=False, download=True,
+test_dataset = datasets.MNIST(root="dataset/mnist/", train=False, download=True,
                               transform=transforms.ToTensor())
 # len
 train_data_size = len(train_dataset)
@@ -65,7 +69,11 @@ if os.path.exists(logs_path):
 writer = SummaryWriter(logs_path)
 
 for i in range(epoch):
-    print("------第{}轮训练开始------".format(i + 1))
+    running_loss = 0.0
+    times = 0
+    # 训练步骤开始
+    net.train()
+    train_dataloader = tqdm(train_dataloader, desc="train", file=sys.stdout, colour="Green")
     net.train()
     for data in train_dataloader:
         images, targets = data
@@ -78,13 +86,14 @@ for i in range(epoch):
         optimizer.step()
         # 一轮训练结束
         total_train_step += 1
-        if total_train_step % 100 == 0:
-            print("训练次数:{},loss:{}".format(total_train_step, loss))
-            writer.add_scalar("train_loss", loss.item(), total_train_step)
+        running_loss += loss.item()
+        times += 1
+    print('epoch:%2d  loss:%.3f' % (i + 1, running_loss / times))
     net.eval()
     total_test_loss = 0
     total_accuracy = 0
     with torch.no_grad():
+        test_dataloader = tqdm(test_dataloader, desc="test ", file=sys.stdout, colour="red")
         for data in test_dataloader:
             images, targets = data
             images = images.to(device)
@@ -94,8 +103,7 @@ for i in range(epoch):
             total_test_loss += loss
             accuracy = (opt.argmax(1) == targets).sum()
             total_accuracy += accuracy
-        print("第{}轮训练整体测试集上的loss：{}".format(total_test_step + 1, total_test_loss))
-        print("第{}轮训练整体测试集上的正确率：{}".format(total_test_step + 1, total_accuracy / test_data_size))
+        print('Accuracy on test set:%d %%' % (100 * total_accuracy / test_data_size))
         writer.add_scalar("test_loss", total_test_loss, total_train_step)
         writer.add_scalar("test_accuracy", total_accuracy / test_data_size, total_test_step)
         if (total_accuracy / test_data_size) >= 0.99:
