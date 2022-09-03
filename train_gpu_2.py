@@ -1,3 +1,5 @@
+import sys
+
 import torch.optim
 import torchvision.datasets
 from torch.utils.tensorboard import SummaryWriter
@@ -6,11 +8,13 @@ from torch.utils.tensorboard import SummaryWriter
 from torch import nn
 from torch.utils.data import DataLoader
 # 定义训练的设备
+from tqdm import tqdm
+
 device = torch.device("cuda")
-train_data = torchvision.datasets.CIFAR10(root="./data1", train=True,
+train_data = torchvision.datasets.CIFAR10(root="CIFAR10", train=True,
                                           transform=torchvision.transforms.ToTensor(),
                                           download=True)
-test_data = torchvision.datasets.CIFAR10(root="./data1", train=False,
+test_data = torchvision.datasets.CIFAR10(root="CIFAR10", train=False,
                                          transform=torchvision.transforms.ToTensor(),
                                          download=True)
 # length
@@ -69,9 +73,11 @@ epoch = 100
 writer = SummaryWriter("logs_train")
 
 for i in range(epoch):
-    print("------第{}轮训练开始-------".format(i + 1))
+    running_loss = 0.0
+    times = 0
     # 训练步骤开始
     heino.train()
+    train_dataloader = tqdm(train_dataloader, desc="train", file=sys.stdout, colour="Green")
     for data in train_dataloader:
         imgs, targets = data
         imgs = imgs.to(device)
@@ -84,14 +90,15 @@ for i in range(epoch):
         optimizer.step()  # 优化，一次训练结束
 
         total_train_step += 1
-        if total_train_step % 100 == 0:
-            print("训练次数：{}，loss：{}".format(total_train_step, loss.item()))
-            writer.add_scalar("train_loss", loss.item(), total_train_step)
+        running_loss += loss.item()
+        times += 1
+    print('epoch:%2d  loss:%.3f' % (i + 1, running_loss / times))
     # 测试步骤开始
     heino.eval()
     total_test_loss = 0
     total_accuracy = 0
     with torch.no_grad():
+        test_dataloader = tqdm(test_dataloader, desc="test ", file=sys.stdout, colour="red")
         for data in test_dataloader:
             imgs, targets = data
             imgs = imgs.to(device)
@@ -101,8 +108,7 @@ for i in range(epoch):
             total_test_loss += loss
             accuracy = (opts.argmax(1) == targets).sum()
             total_accuracy += accuracy
-    print("整体测试集上的loss：{}".format(total_test_loss.item()))
-    print("整体测试集上的正确率：{}".format(total_accuracy / test_data_size))
+    print('Accuracy on test set:%d %%' % (100 * total_accuracy / test_data_size))
     writer.add_scalar("test_loss", total_test_loss, total_train_step)
     writer.add_scalar("test_accuracy", total_accuracy / test_data_size, total_test_step)
     total_test_step += 1

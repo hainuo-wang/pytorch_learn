@@ -97,7 +97,7 @@ def train(epoch, train_loader):
     running_loss = 0.0
     # 返回了数据下标和数据
     times = 0
-    train_loader = tqdm(train_loader, file=sys.stdout, colour="Green")
+    train_loader = tqdm(train_loader, desc="train", file=sys.stdout, colour="Green")
     for batch_idx, data in enumerate(train_loader, 0):
         # 送入两个张量，一个张量是64个图像的特征，一个张量图片对应的数字
         inputs, target = data
@@ -124,7 +124,7 @@ def train(epoch, train_loader):
 def test(test_loader):
     correct = 0
     total = 0
-    test_loader = tqdm(test_loader, file=sys.stdout, colour="red")
+    test_loader = tqdm(test_loader, desc="test", file=sys.stdout, colour="red")
     # 不会计算梯度
     with torch.no_grad():
         for data in test_loader:  # 拿数据

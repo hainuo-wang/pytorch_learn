@@ -1,3 +1,5 @@
+import sys
+
 import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
@@ -6,6 +8,7 @@ from torchvision import datasets
 from torch.utils.data import DataLoader
 import torch.nn.functional as F  # 使用激活函数relu()的包
 import torch.optim as optim  # 优化器的包
+from tqdm import tqdm
 
 batch_size = 64
 # 对图像进行预处理，将图像转换为
@@ -67,8 +70,10 @@ criterion = torch.nn.CrossEntropyLoss()
 optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.5)  # momentum动量
 
 
-def train(epoch):
+def train(epoch, train_loader):
     running_loss = 0.0
+    times = 0
+    train_loader = tqdm(train_loader, desc="train", file=sys.stdout, colour="Green")
     # 返回了数据下标和数据
     for batch_idx, data in enumerate(train_loader, 0):
         # 送入两个张量，一个张量是64个图像的特征，一个张量图片对应的数字
@@ -89,14 +94,15 @@ def train(epoch):
 
         # 每300次输出一次
         running_loss += loss.item()
-        if batch_idx % 100 == 99:
-            print('[%d,%5d] loss:%.3f' % (epoch + 1, batch_idx + 1, running_loss / 300))
-            running_loss = 0.0
+        times += 1
+    print('epoch:%2d  loss:%.3f' % (epoch + 1, running_loss / times))
 
 
-def test():
+
+def test(test_loader):
     correct = 0
     total = 0
+    test_loader = tqdm(test_loader, desc="test", file=sys.stdout, colour="red")
     # 不会计算梯度
     with torch.no_grad():
         for data in test_loader:  # 拿数据
@@ -115,10 +121,10 @@ def test():
 if __name__ == '__main__':
     total_accuracy = []
     for epoch in range(15):
-        train(epoch)
-        single_accuracy = test()
+        train(epoch, train_loader)
+        single_accuracy = test(test_loader)
         total_accuracy.append(single_accuracy)
-    figure = plt.figure(figsize=(8, 8))
+    plt.figure(figsize=(8, 8))
     plt.title("RestNet")
     plt.xlabel("epoch")
     plt.ylabel("accuracy")
