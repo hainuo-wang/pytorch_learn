@@ -142,7 +142,7 @@ def test(test_loader):
 
 if __name__ == '__main__':
     total_accuracy = []
-    for epoch in range(15):
+    for epoch in range(50):
         train(epoch, train_loader)
         single_accuracy = test(test_loader)
         total_accuracy.append(single_accuracy)
@@ -151,5 +151,5 @@ if __name__ == '__main__':
     plt.xlabel("epoch")
     plt.ylabel("accuracy")
     plt.grid(visible=True)
-    plt.plot(range(15), total_accuracy)
+    plt.plot(range(50), total_accuracy)
     plt.show()
