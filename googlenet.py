@@ -121,9 +121,10 @@ def train(epoch, train_loader):
     print('epoch:%2d  loss:%.3f' % (epoch + 1, running_loss / times))
 
 
-def test():
+def test(test_loader):
     correct = 0
     total = 0
+    test_loader = tqdm(test_loader, file=sys.stdout, colour="red")
     # 不会计算梯度
     with torch.no_grad():
         for data in test_loader:  # 拿数据
@@ -143,9 +144,9 @@ if __name__ == '__main__':
     total_accuracy = []
     for epoch in range(15):
         train(epoch, train_loader)
-        single_accuracy = test()
+        single_accuracy = test(test_loader)
         total_accuracy.append(single_accuracy)
-    figure = plt.figure(figsize=(8, 8))
+    plt.figure(figsize=(8, 6))
     plt.title("GoogLeNet")
     plt.xlabel("epoch")
     plt.ylabel("accuracy")
