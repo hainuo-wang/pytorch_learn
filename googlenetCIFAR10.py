@@ -15,14 +15,13 @@ batch_size = 64
 transform = transforms.Compose([
     # 将原始图像PIL变为张量tensor(H*W*C),再将[0,255]区间转换为[0.1,1.0]
     transforms.ToTensor(),
-    # 使用均值和标准差对张量图像进行归一化
-    transforms.Normalize((0.1307,), (0.3081,))
+    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
 ])
 
-train_dataset = datasets.MNIST(root='dataset/mnist/', train=True, download=True, transform=transform)
+train_dataset = datasets.CIFAR10(root='CIFAR10', train=True, download=True, transform=transform)
 train_loader = DataLoader(train_dataset, shuffle=True, batch_size=batch_size)
 
-test_dataset = datasets.MNIST(root='dataset/mnist/', train=False, download=True, transform=transform)
+test_dataset = datasets.CIFAR10(root='CIFAR10', train=False, download=True, transform=transform)
 test_loader = DataLoader(test_dataset, shuffle=False, batch_size=batch_size)
 
 
@@ -65,14 +64,14 @@ class InceptionA(nn.Module):
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.conv1 = nn.Conv2d(1, 10, kernel_size=5)
+        self.conv1 = nn.Conv2d(3, 64, kernel_size=5)
         self.conv2 = nn.Conv2d(88, 20, kernel_size=5)
 
-        self.incep1 = InceptionA(in_channels=10)
+        self.incep1 = InceptionA(in_channels=64)
         self.incep2 = InceptionA(in_channels=20)
 
         self.mp = nn.MaxPool2d(2)
-        self.fc = nn.Linear(1408, 10)
+        self.fc = nn.Linear(2200, 10)
 
     def forward(self, x):
         in_size = x.size(0)
